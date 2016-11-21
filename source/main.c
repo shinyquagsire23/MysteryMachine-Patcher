@@ -183,11 +183,12 @@ Result loadCode()
     fclose(file);
     printf(".code written to %s\n", code_path);
     
-    if(tid_short == 0x00055E00 || tid_short == 0x00055D00 || tid_short == 0x0011C400 || tid_short == 0x0011C500) // || tid_short == 0x00164800 || tid_short == 0x00175E00)
+    if(tid_short == 0x00055E00 || tid_short == 0x00055D00 || tid_short == 0x0011C400 || tid_short == 0x0011C500 || tid_short == 0x00164800 || tid_short == 0x00175E00)
     {
         u32 ser_addr = 0;
         u32 boss1_addr = 0;
         u32 boss2_addr = 0;
+        u32 boss3_addr = 0;
         if(tid_short == 0x00055E00 || 0x00055D00) { // Y || X
             ser_addr = search_string("https://3ds1-fushigi.pokemon-gl.com/api/", 0x490000, 0x100000, paramblk->code_data);
             boss1_addr = search_string("https://npdl.cdn.nintendowifi.net/p01/nsa/%s/%s/%s", 0x490000, 0x100000, paramblk->code_data);
@@ -198,11 +199,14 @@ Result loadCode()
             boss1_addr = search_string("https://npdl.cdn.nintendowifi.net/p01/nsa/%s/%s/%s", 0x4E0000, 0x100000, paramblk->code_data);
             boss2_addr = search_string("https://npfl.c.app.nintendowifi.net/p01/filelist/", 0x4E0000, 0x100000, paramblk->code_data);
         }
-        // else { // (tid_short == 0x00164800 || 0x00175E00) aka SUN || MOON
-        //     u32 ser_addr = search_string("https://3ds3-fushigi.pokemon-gl.com/api/", , 0x100000, paramblk->code_data);
-        // }
+        else if(tid_short == 0x00164800 || 0x00175E00) // SUN || MOON
+            ser_addr = search_string("https://3ds3-fushigi.pokemon-gl.com/api/", 0x510000, 0x100000, paramblk->code_data);
+            boss1_addr = search_string("https://npdl.cdn.nintendowifi.net/p01/nsa/%s/%s/%s", 0x510000, 0x100000, paramblk->code_data);
+            boss2_addr = search_string("https://npfl.c.app.nintendowifi.net/p01/filelist/", 0x510000, 0x100000, paramblk->code_data);
+            boss3_addr = search_string("https://npdl.cdn.nintendowifi.net/p01/nsa/%s/%s/%s/%s", 0x510000, 0x100000, paramblk->code_data);
+        }
 
-        printf("Searched and found: %x %x %x\n", ser_addr, boss1_addr, boss2_addr);
+        printf("Searched and found: %x %x %x %x\n", ser_addr, boss1_addr, boss2_addr, boss3_addr);
         
         static char *base_url = "mys.salthax.org";
         
@@ -217,6 +221,13 @@ Result loadCode()
         memset((u8*)(paramblk->code_data)+boss2_addr*sizeof(u8), 0, strlen("https://npfl.c.app.nintendowifi.net/p01/filelist/"));
         sprintf((u8*)(paramblk->code_data)+boss2_addr*sizeof(u8), "http://%s/p01/filelist/", base_url);
         //printf("%s\n", (u8*)(paramblk->code_data)+boss2_addr*sizeof(u8));
+        
+        if(boss3_addr != 0)
+        {
+            memset((u8*)(paramblk->code_data)+boss3_addr*sizeof(u8), 0, strlen("https://npdl.cdn.nintendowifi.net/p01/nsa/%s/%s/%s/%s"));
+            sprintf((u8*)(paramblk->code_data)+boss3_addr*sizeof(u8), "https://%s/p01/nsa/%%s/%%s/%%s/%%s", base_url);
+            //printf("%s\n", (u8*)(paramblk->code_data)+boss2_addr*sizeof(u8));
+        }
         
         snprintf(code_path, 128, "sdmc:/hans/%08X.code", tid_short);
         
